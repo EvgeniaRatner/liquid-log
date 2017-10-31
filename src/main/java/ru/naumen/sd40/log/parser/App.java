@@ -3,6 +3,7 @@ package ru.naumen.sd40.log.parser;
 import java.io.*;
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.influxdb.dto.BatchPoints;
 
@@ -21,7 +22,7 @@ public class App
      * @throws ParseException
      */
 //    public static void main(String[] args) throws IOException, ParseException
-    public static void main(String filePath, String influxDb, String mode, boolean log, String timeZone )
+    public static void main(String filePath, String influxDb, String mode, boolean trace, String timeZone )
             throws IOException, ParseException
     {
         influxDb = influxDb.replaceAll("-", "_");
@@ -30,8 +31,12 @@ public class App
         InfluxDAO storage = null;
         if (influxDb != null)
         {
-            storage = new InfluxDAO(System.getProperty("influx.host"), System.getProperty("influx.user"),
-                    System.getProperty("influx.password"));
+            FileInputStream fis;
+            Properties property = new Properties();
+            fis = new FileInputStream("src/main/resources/application.properties");
+            property.load(fis);
+            storage = new InfluxDAO(property.getProperty("influx.host"), property.getProperty("influx.user"),
+                    property.getProperty("influx.password"));
             storage.init();
             storage.connectToDB(influxDb);
         }
@@ -113,7 +118,7 @@ public class App
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + mode);
         }
 
-        if (System.getProperty("NoCsv") == null)
+        if (trace)
         {
             System.out.print("Timestamp;Actions;Min;Mean;Stddev;50%%;95%%;99%%;99.9%%;Max;Errors\n");
         }
@@ -123,7 +128,7 @@ public class App
             ActionDoneParser dones = set.getActionsDone();
             dones.calculate();
             ErrorParser erros = set.getErrors();
-            if (System.getProperty("NoCsv") == null)
+            if (trace)
             {
                 System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k, dones.getCount(),
                         dones.getMin(), dones.getMean(), dones.getStddev(), dones.getPercent50(), dones.getPercent95(),

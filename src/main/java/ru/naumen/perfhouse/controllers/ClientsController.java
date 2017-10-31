@@ -77,12 +77,11 @@ public class ClientsController
         return new ModelAndView("clients", model, HttpStatus.OK);
     }
 
-    @RequestMapping(path = "/parsing", method = RequestMethod.POST)
+    @RequestMapping(path = "/parse", method = RequestMethod.POST)
     public void startParsing(HttpServletRequest request,
                              HttpServletResponse response) throws IOException, ParseException
     {
         response.sendRedirect("/");
-        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAA");
         App.main(request.getParameter("filepath")
                 , request.getParameter("influx")
                 , request.getParameter("mode")
