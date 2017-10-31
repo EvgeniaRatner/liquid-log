@@ -1,8 +1,6 @@
 package ru.naumen.sd40.log.parser;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.util.HashMap;
 
@@ -18,19 +16,16 @@ public class App
 {
     /**
      * 
-     * @param args [0] - sdng.log, [1] - gc.log, [2] - top, [3] - dbName, [4] timezone
+//     * @param args [0] - sdng.log, [1] - gc.log, [2] - top, [3] - dbName, [4] timezone
      * @throws IOException
      * @throws ParseException
      */
-    public static void main(String[] args) throws IOException, ParseException
+//    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String filePath, String influxDb, String mode, boolean log, String timeZone )
+            throws IOException, ParseException
     {
-        String influxDb = null;
+        influxDb = influxDb.replaceAll("-", "_");
 
-        if (args.length > 1)
-        {
-            influxDb = args[1];
-            influxDb = influxDb.replaceAll("-", "_");
-        }
 
         InfluxDAO storage = null;
         if (influxDb != null)
@@ -49,24 +44,21 @@ public class App
             points = storage.startBatchPoints(influxDb);
         }
 
-        String log = args[0];
-
         HashMap<Long, DataSet> data = new HashMap<>();
 
         TimeParser timeParser = new TimeParser();
         GCTimeParser gcTime = new GCTimeParser();
-        if (args.length > 2)
+        if (timeZone != null)
         {
-            timeParser = new TimeParser(args[2]);
-            gcTime = new GCTimeParser(args[2]);
+            timeParser = new TimeParser(timeZone);
+            gcTime = new GCTimeParser(timeZone);
         }
 
-        String mode = System.getProperty("parse.mode", "");
         switch (mode)
         {
         case "sdng":
             //Parse sdng
-            try (BufferedReader br = new BufferedReader(new FileReader(log), 32 * 1024 * 1024))
+            try (BufferedReader br = new BufferedReader(new FileReader(filePath), 32 * 1024 * 1024))
             {
                 String line;
                 while ((line = br.readLine()) != null)
@@ -88,7 +80,7 @@ public class App
             break;
         case "gc":
             //Parse gc log
-            try (BufferedReader br = new BufferedReader(new FileReader(log)))
+            try (BufferedReader br = new BufferedReader(new FileReader(filePath)))
             {
                 String line;
                 while ((line = br.readLine()) != null)
@@ -108,10 +100,10 @@ public class App
             }
             break;
         case "top":
-            TopParser topParser = new TopParser(log, data);
-            if (args.length > 2)
+            TopParser topParser = new TopParser(filePath, data);
+            if (timeZone != null)
             {
-                topParser.configureTimeZone(args[2]);
+                topParser.configureTimeZone(timeZone);
             }
             //Parse top
             topParser.parse();
