@@ -91,7 +91,6 @@ public class ClientsController
 
     }
 
-
     @RequestMapping(path = "{client}", method = RequestMethod.POST)
     public void postClientStatFormat1(@PathVariable("client") String client, HttpServletRequest request,
             HttpServletResponse response) throws IOException
