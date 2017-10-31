@@ -77,6 +77,21 @@ public class ClientsController
         return new ModelAndView("clients", model, HttpStatus.OK);
     }
 
+    @RequestMapping(path = "/parsing", method = RequestMethod.POST)
+    public void startParsing(HttpServletRequest request,
+                             HttpServletResponse response) throws IOException, ParseException
+    {
+        response.sendRedirect("/");
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        App.main(request.getParameter("filepath")
+                , request.getParameter("influx")
+                , request.getParameter("mode")
+                , request.getParameter("trace") != null ? true: false
+                , request.getParameter("timezone"));
+
+    }
+
+
     @RequestMapping(path = "{client}", method = RequestMethod.POST)
     public void postClientStatFormat1(@PathVariable("client") String client, HttpServletRequest request,
             HttpServletResponse response) throws IOException
@@ -95,19 +110,5 @@ public class ClientsController
             LOG.error(ex.toString(), ex);
             throw ex;
         }
-    }
-
-    @RequestMapping(path = "/parsing", method = RequestMethod.POST)
-    public void startParsing(HttpServletRequest request,
-                             HttpServletResponse response) throws IOException, ParseException
-    {
-        response.sendRedirect("/");
-        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAA");
-             App.main(request.getParameter("filepath")
-                     , request.getParameter("influx")
-                     , request.getParameter("mode")
-                     , request.getParameter("trace") != null ? true: false
-                     , request.getParameter("timezone"));
-
     }
 }
