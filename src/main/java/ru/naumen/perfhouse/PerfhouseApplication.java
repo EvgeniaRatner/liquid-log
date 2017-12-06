@@ -23,12 +23,11 @@ public class PerfhouseApplication extends SpringBootServletInitializer
     {
         if (System.getProperty("Parser") != null)
         {
-            App.main(args);
+       //     App.main(args);
         }
         else
         {
             SpringApplication.run(PerfhouseApplication.class, args);
         }
     }
-
 }

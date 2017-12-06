@@ -1,10 +1,9 @@
 package ru.naumen.sd40.log.parser;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.influxdb.dto.BatchPoints;
 
@@ -18,25 +17,26 @@ public class App
 {
     /**
      * 
-     * @param args [0] - sdng.log, [1] - gc.log, [2] - top, [3] - dbName, [4] timezone
+//     * @param args [0] - sdng.log, [1] - gc.log, [2] - top, [3] - dbName, [4] timezone
      * @throws IOException
      * @throws ParseException
      */
-    public static void main(String[] args) throws IOException, ParseException
+//    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String filePath, String influxDb, String mode, boolean trace, String timeZone )
+            throws IOException, ParseException
     {
-        String influxDb = null;
+        influxDb = influxDb.replaceAll("-", "_");
 
-        if (args.length > 1)
-        {
-            influxDb = args[1];
-            influxDb = influxDb.replaceAll("-", "_");
-        }
 
         InfluxDAO storage = null;
         if (influxDb != null)
         {
-            storage = new InfluxDAO(System.getProperty("influx.host"), System.getProperty("influx.user"),
-                    System.getProperty("influx.password"));
+            FileInputStream fis;
+            Properties property = new Properties();
+            fis = new FileInputStream("src/main/resources/application.properties");
+            property.load(fis);
+            storage = new InfluxDAO(property.getProperty("influx.host"), property.getProperty("influx.user"),
+                    property.getProperty("influx.password"));
             storage.init();
             storage.connectToDB(influxDb);
         }
@@ -49,24 +49,21 @@ public class App
             points = storage.startBatchPoints(influxDb);
         }
 
-        String log = args[0];
-
         HashMap<Long, DataSet> data = new HashMap<>();
 
         TimeParser timeParser = new TimeParser();
         GCTimeParser gcTime = new GCTimeParser();
-        if (args.length > 2)
+        if (timeZone != null)
         {
-            timeParser = new TimeParser(args[2]);
-            gcTime = new GCTimeParser(args[2]);
+            timeParser = new TimeParser(timeZone);
+            gcTime = new GCTimeParser(timeZone);
         }
 
-        String mode = System.getProperty("parse.mode", "");
         switch (mode)
         {
         case "sdng":
             //Parse sdng
-            try (BufferedReader br = new BufferedReader(new FileReader(log), 32 * 1024 * 1024))
+            try (BufferedReader br = new BufferedReader(new FileReader(filePath), 32 * 1024 * 1024))
             {
                 String line;
                 while ((line = br.readLine()) != null)
@@ -88,7 +85,7 @@ public class App
             break;
         case "gc":
             //Parse gc log
-            try (BufferedReader br = new BufferedReader(new FileReader(log)))
+            try (BufferedReader br = new BufferedReader(new FileReader(filePath)))
             {
                 String line;
                 while ((line = br.readLine()) != null)
@@ -108,10 +105,10 @@ public class App
             }
             break;
         case "top":
-            TopParser topParser = new TopParser(log, data);
-            if (args.length > 2)
+            TopParser topParser = new TopParser(filePath, data);
+            if (timeZone != null)
             {
-                topParser.configureTimeZone(args[2]);
+                topParser.configureTimeZone(timeZone);
             }
             //Parse top
             topParser.parse();
@@ -121,7 +118,7 @@ public class App
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + mode);
         }
 
-        if (System.getProperty("NoCsv") == null)
+        if (trace)
         {
             System.out.print("Timestamp;Actions;Min;Mean;Stddev;50%%;95%%;99%%;99.9%%;Max;Errors\n");
         }
@@ -131,7 +128,7 @@ public class App
             ActionDoneParser dones = set.getActionsDone();
             dones.calculate();
             ErrorParser erros = set.getErrors();
-            if (System.getProperty("NoCsv") == null)
+            if (trace)
             {
                 System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k, dones.getCount(),
                         dones.getMin(), dones.getMean(), dones.getStddev(), dones.getPercent50(), dones.getPercent95(),

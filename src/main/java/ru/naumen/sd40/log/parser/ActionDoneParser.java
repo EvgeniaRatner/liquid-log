@@ -43,6 +43,8 @@ public class ActionDoneParser
 
     private int searchActions = 0;
 
+    private int getCatalogsAction = 0;
+
     boolean nan = true;
 
     private HashMap<String, Integer> actions = new HashMap<>();
@@ -109,6 +111,8 @@ public class ActionDoneParser
     {
         return getFormActions;
     }
+
+    public int getCatalogsAction() {return getCatalogsAction;}
 
     public double getMax()
     {
@@ -182,6 +186,10 @@ public class ActionDoneParser
             {
                 addObjectActions++;
             }
+            if (actionInLowerCase.equals("getcatalogsaction"))
+            {
+                getCatalogsAction++;
+            }
             else if (actionInLowerCase.equals("editobjectaction"))
             {
                 editObjectsActions++;
@@ -192,7 +200,6 @@ public class ActionDoneParser
             }
             else if (!actionInLowerCase.contains("advlist")
                     && actionInLowerCase.matches("(?i)^([a-zA-Z]+|Get)[a-zA-Z]+List[a-zA-Z]+"))
-
             {
                 getListActions++;
             }
@@ -204,11 +211,11 @@ public class ActionDoneParser
             {
                 getDtObjectActions++;
             }
+
             else if (actionInLowerCase.matches("(?i)[a-zA-Z]+search[a-zA-Z]+"))
             {
                 searchActions++;
             }
-
         }
     }
 }
