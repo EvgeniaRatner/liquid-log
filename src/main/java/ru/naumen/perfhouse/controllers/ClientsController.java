@@ -4,6 +4,7 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import ru.naumen.perfhouse.influx.InfluxDAO;
-import ru.naumen.sd40.log.parser.App;
+import ru.naumen.sd40.log.parser.Parser.LogParser;
 
 /**
  * Created by dkirpichenkov on 26.10.16.
@@ -34,11 +35,13 @@ public class ClientsController
 {
     private Logger LOG = LoggerFactory.getLogger(ClientsController.class);
     private InfluxDAO influxDAO;
+    private LogParser logParser;
 
     @Inject
-    public ClientsController(InfluxDAO influxDAO)
+    public ClientsController(InfluxDAO influxDAO, LogParser logParser)
     {
         this.influxDAO = influxDAO;
+        this.logParser = logParser;
     }
 
     @RequestMapping(path = "/")
@@ -77,23 +80,22 @@ public class ClientsController
         return new ModelAndView("clients", model, HttpStatus.OK);
     }
 
-    @RequestMapping(path = "/parsing", method = RequestMethod.POST)
+    @RequestMapping(path = "/parse", method = RequestMethod.POST)
     public void startParsing(HttpServletRequest request,
-                             HttpServletResponse response) throws IOException, ParseException
-    {
-        response.sendRedirect("/");
-        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAA");
-        App.main(request.getParameter("filepath")
-                , request.getParameter("influx")
-                , request.getParameter("mode")
-                , request.getParameter("trace") != null ? true: false
-                , request.getParameter("timezone"));
+                             HttpServletResponse response) throws Exception {
 
+        logParser.parseLog(request.getParameter("filepath")
+                ,request.getParameter("influx")
+                ,request.getParameter("mode")
+                ,request.getParameter("trace") != null ? true: false
+                ,request.getParameter("timezone"));
+
+        response.sendRedirect("/");
     }
 
     @RequestMapping(path = "{client}", method = RequestMethod.POST)
     public void postClientStatFormat1(@PathVariable("client") String client, HttpServletRequest request,
-            HttpServletResponse response) throws IOException
+                                      HttpServletResponse response) throws IOException
     {
         try
         {

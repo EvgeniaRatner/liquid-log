@@ -1,11 +1,14 @@
 package ru.naumen.sd40.log.parser;
 
+import ru.naumen.sd40.log.parser.Interfaces.IDataParser;
+import ru.naumen.sd40.log.parser.Storage.ErrorStorage;
+
 import java.util.regex.Pattern;
 
 /**
  * Created by doki on 22.10.16.
  */
-public class ErrorParser
+public class ErrorParser implements IDataParser<ErrorStorage>
 {
     long warnCount;
     long errorCount;
@@ -15,19 +18,19 @@ public class ErrorParser
     Pattern errorRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) ERROR");
     Pattern fatalRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) FATAL");
 
-    void parseLine(String line)
+    public void parseLine(String line, ErrorStorage storage)
     {
         if (warnRegEx.matcher(line).find())
         {
-            warnCount++;
+            storage.warnCount++;
         }
         if (errorRegEx.matcher(line).find())
         {
-            errorCount++;
+            storage.errorCount++;
         }
         if (fatalRegEx.matcher(line).find())
         {
-            fatalCount++;
+            storage.fatalCount++;
         }
     }
 

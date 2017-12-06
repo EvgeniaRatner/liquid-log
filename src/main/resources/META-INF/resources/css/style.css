@@ -208,3 +208,12 @@ textarea {
   text-align: right;
 }
 
+select{
+   width: 100%;
+   vertical-align: middle;
+   border-color: #1ab188;
+}
+
+option:hover {
+  background: #1ab188;
+}
