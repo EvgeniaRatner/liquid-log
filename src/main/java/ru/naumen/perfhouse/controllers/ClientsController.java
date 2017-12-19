@@ -1,6 +1,6 @@
 package ru.naumen.perfhouse.controllers;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ru.naumen.perfhouse.influx.InfluxDAO;
+import ru.naumen.sd40.log.parser.Parser.LogParser;
 
 /**
  * Created by dkirpichenkov on 26.10.16.
@@ -30,11 +31,13 @@ public class ClientsController
 {
     private Logger LOG = LoggerFactory.getLogger(ClientsController.class);
     private InfluxDAO influxDAO;
+    private LogParser logParser;
 
     @Inject
-    public ClientsController(InfluxDAO influxDAO)
+    public ClientsController(InfluxDAO influxDAO, LogParser logParser)
     {
         this.influxDAO = influxDAO;
+        this.logParser = logParser;
     }
 
     @RequestMapping(path = "/")
@@ -73,9 +76,23 @@ public class ClientsController
         return new ModelAndView("clients", model, HttpStatus.OK);
     }
 
+    @RequestMapping(path = "/parse", method = RequestMethod.POST)
+    public void startParsing(HttpServletRequest request,
+                             HttpServletResponse response) throws Exception {
+
+        logParser.parseLog(request.getParameter("filepath")
+                , request.getParameter("influx")
+                , request.getParameter("mode")
+                , request.getParameter("trace") != null ? true: false
+                , request.getParameter("timezone"));
+
+        response.sendRedirect("/");
+
+    }
+
     @RequestMapping(path = "{client}", method = RequestMethod.POST)
     public void postClientStatFormat1(@PathVariable("client") String client, HttpServletRequest request,
-            HttpServletResponse response) throws IOException
+                                      HttpServletResponse response) throws IOException
     {
         try
         {

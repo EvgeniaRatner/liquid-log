@@ -45,10 +45,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ru.naumen.perfhouse.statdata.Constants;
-import ru.naumen.sd40.log.parser.ActionDoneParser;
-import ru.naumen.sd40.log.parser.ErrorParser;
-import ru.naumen.sd40.log.parser.GCParser;
-import ru.naumen.sd40.log.parser.TopData;
+import ru.naumen.sd40.log.parser.Storages.*;
 
 /**
  * Created by doki on 24.10.16.
@@ -113,28 +110,31 @@ public class InfluxDAO
         return BatchPoints.database(dbName).build();
     }
 
-    public void storeActionsFromLog(BatchPoints batch, String dbName, long date, ActionDoneParser dones,
-            ErrorParser errors)
+//    public void storeActionsFromLog(BatchPoints batch, String dbName, long date, ActionDoneParser dones,
+//            ErrorParser errors)
+    public void storeActionsFromLog(BatchPoints batch, String dbName, long date, SDNGStorage storage)
     {
         //@formatter:off
+        ErrorStorage errors = storage.error;
+        ActionDoneStorage dones = storage.actionDone;
         Builder builder = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
-                .addField(COUNT, dones.getCount())
-                .addField("min", dones.getMin())
-                .addField(MEAN, dones.getMean())
-                .addField(STDDEV, dones.getStddev())
-                .addField(PERCENTILE50, dones.getPercent50())
-                .addField(PERCENTILE95, dones.getPercent95())
-                .addField(PERCENTILE99, dones.getPercent99())
-                .addField(PERCENTILE999, dones.getPercent999())
-                .addField(MAX, dones.getMax())
-                .addField(ERRORS, errors.getErrorCount())
-                .addField(ADD_ACTIONS, dones.getAddObjectActions())
-                .addField(EDIT_ACTIONS, dones.getEditObjectsActions())
-                .addField(LIST_ACTIONS, dones.geListActions())
-                .addField(COMMENT_ACTIONS, dones.getCommentActions())
-                .addField(GET_FORM_ACTIONS, dones.getFormActions())
-                .addField(GET_DT_OBJECT_ACTIONS, dones.getDtObjectActions())
-                .addField(SEARCH_ACTIONS, dones.getSearchActions());
+                .addField(COUNT, dones.count)
+                .addField("min", dones.min)
+                .addField(MEAN, dones.mean)
+                .addField(STDDEV, dones.stddev)
+                .addField(PERCENTILE50, dones.percent50)
+                .addField(PERCENTILE95, dones.percent95)
+                .addField(PERCENTILE99, dones.percent99)
+                .addField(PERCENTILE999, dones.percent999)
+                .addField(MAX, dones.max)
+                .addField(ERRORS, errors.errorCount)
+                .addField(ADD_ACTIONS, dones.addObjectActions)
+                .addField(EDIT_ACTIONS, dones.editObjectsActions)
+                .addField(LIST_ACTIONS, dones.getListActions)
+                .addField(COMMENT_ACTIONS, dones.commentActions)
+                .addField(GET_FORM_ACTIONS, dones.getFormActions)
+                .addField(GET_DT_OBJECT_ACTIONS, dones.getDtObjectActions)
+                .addField(SEARCH_ACTIONS, dones.searchActions);
 
 
         //@formatter:on
@@ -181,7 +181,7 @@ public class InfluxDAO
         }
     }
 
-    public void storeGc(BatchPoints batch, String dbName, long date, GCParser gc)
+    public void storeGc(BatchPoints batch, String dbName, long date, GCStorage gc)
     {
         Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
                 .addField(GCTIMES, gc.getGcTimes()).addField(AVARAGE_GC_TIME, gc.getCalculatedAvg())
@@ -197,7 +197,7 @@ public class InfluxDAO
         }
     }
 
-    public void storeTop(BatchPoints batch, String dbName, long date, TopData data)
+    public void storeTop(BatchPoints batch, String dbName, long date, TOPStorage data)
     {
         Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
                 .addField(AVG_LA, data.getAvgLa()).addField(AVG_CPU, data.getAvgCpuUsage())
